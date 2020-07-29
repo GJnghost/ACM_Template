@@ -1,0 +1,5 @@
+const int maxn = 1e5 + 10;
+int d[maxn], n;
+int lowbit(int x) { return x & (-x); }  //lowbit无法处理0的情况，因为它的结果也是0，最终为一个死循环
+int query(int x) { int res = 0; while (x) { res += d[x]; x -= lowbit(x); }return res; } //区间查询 O(logN)
+void add(int x, int v) { while (x <= n) { d[x] += v; x += lowbit(x); } }//单点更新 O(logN)对a[x]加上v 

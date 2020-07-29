@@ -1,0 +1,43 @@
+const int maxn = 3e3 + 10;
+int n, m, ans, d2[4][maxn][maxn];
+int lowbit(int x) { return x & (-x); }  //lowbit无法处理0的情况，因为它的结果也是0，最终为一个死循环
+
+void add2(int x, int y, int delta) {
+	if (x < 1 || n < x || y < 1 || m < y) return;
+	for(int i=x;i<=n;i+=lowbit(i))
+		for (int j = y; j <= m; j+=lowbit(j)) {
+			d2[0][i][j] += delta;
+			d2[1][i][j] += delta * y;
+			d2[2][i][j] += delta * x;
+			d2[3][i][j] += delta * x * y;
+		}
+}
+
+int query2(int x, int y) {
+	int res = 0;
+	for (int i = x; i ;i-=lowbit(i))
+		for (int j = y; j; j-=lowbit(j))
+			res = res + (x + 1) * (y + 1)* d2[0][i][j] - (x + 1) * d2[1][i][j] - (y + 1) * d2[2][i][j] + d2[3][i][j];
+	return res;
+}
+
+int main(){
+	string s;
+	while (cin >> s) {
+		int a, b, c, d,delta;
+		if (s[0] == 'X') cin >> n >> m;
+		else if (s[0] == 'L') {
+			cin >> a >> b >> c >> d >> delta;
+			add2(a, b, delta);
+			add2(a, d + 1, -delta);
+			add2(c + 1, b, -delta);
+			add2(c+1, d+1, delta);
+		}
+		else {
+			cin >> a >> b >> c >> d;
+			cout << query2(a-1, b-1) - query2(a-1, d) - query2(c, b-1) + query2(c, d) << "\n";
+		}
+	}
+	
+	return 0;
+}
