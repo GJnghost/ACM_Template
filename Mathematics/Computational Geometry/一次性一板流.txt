@@ -1,0 +1,179 @@
+#include<bits/stdc++.h>
+#define O_O ios::sync_with_stdio(false);cin.tie(0);cout.tie(0);
+using namespace std;
+typedef long long ll;
+const int maxn = 2e3;
+int n;
+//计算几何
+const double eps = 1e-7;//eps用于控制精度
+const double pi = acos(-1.0);//pi
+struct Point {//点或向量
+	double x, y;
+	Point() {}
+	Point(double x, double y) :x(x), y(y) {}
+}P[maxn];
+
+//向量
+typedef Point Vector;
+Vector operator + (Vector a, Vector b) { return Vector(a.x + b.x, a.y + b.y); }//向量加法
+Vector operator - (Vector a, Vector b) { return Vector(a.x - b.x, a.y - b.y); }//向量减法
+Vector operator * (Vector a, double p) { return Vector(a.x * p, a.y * p); }//向量数乘
+Vector operator / (Vector a, double p) { return Vector(a.x / p, a.y / p); }//向量数除
+int dcmp(double x) { if (fabs(x) < eps) return 0; else if (x > 0) return 1; return -1; }//精度三态函数(>0,<0,=0)
+bool operator == (const Point& a, const Point& b) { return dcmp(a.x - b.x) == 0 && dcmp(a.y - b.y) == 0; }//向量相等
+double Dot(Vector a, Vector b) { return a.x * b.x + a.y * b.y; }//内积//=0则垂直
+double Cross(Vector a, Vector b) { return a.x * b.y - a.y * b.x; }//外积//四边形面积//=0则平行//<0则a顺时针转到b
+Vector Rotate(Vector a, double rad) { return Vector(a.x * cos(rad) - a.y * sin(rad), a.x * sin(rad) + a.y * cos(rad)); }//逆时针旋转
+double Length(Vector a) { return sqrt(Dot(a, a)); }//模
+double Angle(Vector a, Vector b) { return acos(Dot(a, b) / Length(a) / Length(b)); }//夹角,弧度制//还不太顺手
+double Distance(Point a, Point b) { return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y)); }//两点间距离
+double Distance2(Point a, Point b) {return ((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));}
+double Area(Point a, Point b, Point c) { return fabs(Cross(b - a, c - a) / 2); }//三角形面积
+
+//直线与线段
+bool Intersect(Point A, Point B, Point C, Point D) {//线段相交（不包括端点）
+	double t1 = Cross(C - A, D - A) * Cross(C - B, D - B);
+	double t2 = Cross(A - C, B - C) * Cross(A - D, B - D);
+	return dcmp(t1) < 0 && dcmp(t2) < 0;
+}
+bool StrictIntersect(Point A, Point B, Point C, Point D) { //线段相交（包括端点）
+	return
+		dcmp(max(A.x, B.x) - min(C.x, D.x)) >= 0
+		&& dcmp(max(C.x, D.x) - min(A.x, B.x)) >= 0
+		&& dcmp(max(A.y, B.y) - min(C.y, D.y)) >= 0
+		&& dcmp(max(C.y, D.y) - min(A.y, B.y)) >= 0
+		&& dcmp(Cross(C - A, D - A) * Cross(C - B, D - B)) <= 0
+		&& dcmp(Cross(A - C, B - C) * Cross(A - D, B - D)) <= 0;
+}
+double DistanceToLine(Point A, Point M, Point N) {//点A到直线MN的距离,Error:MN=0
+	return fabs(Cross(A - M, A - N) / Distance(M, N));
+}
+Point GetLineIntersection(Point P, Vector v, Point Q, Vector w) {//两直线的交点//预判Cross(v,w)≠0则有且仅有一个解
+	Vector u = P - Q;
+	double t = Cross(w, u) / Cross(v, w);
+	return P + v * t;
+}
+
+//多边形
+bool InsidePolygon(Point A) { //判断点是否在凸多边形内（角度和判别法）
+	double alpha = 0;
+	for (int i = 0; i < n; i++) alpha += fabs(Angle(P[i] - A, P[(i + 1) % n] - A));
+	return dcmp(alpha - 2 * pi) == 0;
+}
+double PolygonArea() {//求多边形面积（叉积和计算法）
+	double sum = 0;
+	Point O = Point(0, 0);
+	for (int i = 0; i < n; i++) sum += Cross(P[i] - O, P[(i + 1) % n] - O);
+	if (sum < 0)sum = -sum;
+	return sum / 2;
+}
+//凸包
+//Graham’s scan算法
+Point result[maxn]; int top;
+bool cmp(Point A, Point B) {
+	double ans = Cross(A - P[0], B - P[0]);
+	if (dcmp(ans) == 0) return dcmp(Distance(P[0], A) - Distance(P[0], B)) < 0;
+	else return ans > 0;
+}
+void Graham() {//Graham凸包扫描算法
+	for (int i = 1; i < n; i++)//寻找起点
+		if (P[i].y < P[0].y || (dcmp(P[i].y - P[0].y) == 0 && P[i].x < P[0].x)) swap(P[i], P[0]);
+	sort(P + 1, P + n, cmp);//极角排序，中心为起点
+	result[0] = P[0];
+	result[1] = P[1];
+	top = 1;
+	for (int i = 2; i < n; i++) {
+		while (top >= 1 && Cross(result[top] - result[top - 1], P[i] - result[top - 1]) < 0) top--;
+		result[++top] = P[i];
+	}
+}
+//Andrew's monotone chain 算法
+inline bool pcmp(Point a, Point b) {
+	if (dcmp(a.x - b.x) == 0)
+		return a.y < b.y;
+	return a.x < b.x;
+}
+void ConvexHull(vector <Point>& p, vector <Point>& h) {
+	int n = p.size(), k = 0;
+	h.assign(2 * n, {});
+	sort(p.begin(), p.end(), pcmp);
+	for (int i = 0; i < n; i++) {
+		while (k >= 2 && dcmp(Cross(h[k - 1] - h[k - 2],p[i] - h[k - 2])) < 0) k--;
+		h[k++] = p[i];
+	}
+	int t = k + 1;
+	for (int i = n - 1; i > 0; i--) {
+		while (k >= t && dcmp(Cross(h[k - 1] - h[k - 2],p[i - 1] - h[k - 2])) < 0) k--;
+		h[k++] = p[i - 1];
+	}
+	h.resize(k - 1);
+}
+//直线凸包
+//甚至还没try
+
+//圆
+struct Circle {
+	Point c;
+	double r;
+	Point point(double a) {//基于圆心角求圆上一点坐标
+		return Point(c.x + cos(a) * r, c.y + sin(a) * r);
+	}
+};
+double Angle(Vector v1) {
+	if (v1.y >= 0)return Angle(v1, Vector(1.0, 0.0));
+	else return 2 * pi - Angle(v1, Vector(1.0, 0.0));
+}
+int GetCC(Circle C1, Circle C2) {//求两圆交点
+	double d = Length(C1.c - C2.c);
+	if (dcmp(d) == 0) {
+		if (dcmp(C1.r - C2.r) == 0)return -1;//重合
+		else return 0;
+	}
+	if (dcmp(C1.r + C2.r - d) < 0)return 0;
+	if (dcmp(fabs(C1.r - C2.r) - d) > 0)return 0;
+	double a = Angle(C2.c - C1.c);
+	double da = acos((C1.r * C1.r + d * d - C2.r * C2.r) / (2 * C1.r * d));
+	Point p1 = C1.point(a - da), p2 = C1.point(a + da);
+	if (p1 == p2)return 1;
+	else return 2;
+}
+//不共线三点求圆心（外心）
+template<typename tp>
+inline tp pow2(const tp& x) {return x * x;}
+inline Point circumcenter(Point p1, Point p2, Point p3) {
+	double a = p1.x - p2.x;
+	double b = p1.y - p2.y;
+	double c = p1.x - p3.x;
+	double d = p1.y - p3.y;
+	double e = (pow2(p1.x) - pow2(p2.x) + pow2(p1.y) - pow2(p2.y)) / 2;
+	double f = (pow2(p1.x) - pow2(p3.x) + pow2(p1.y) - pow2(p3.y)) / 2;
+	return Point((d * e - b * f) / (a * d - b * c), (a * f - c * e) / (a * d - b * c));
+}
+//最小圆覆盖（不过是luogu来的了
+void MinCircleCover(vector <Point>& p, Circle& res) {
+	int n = p.size();
+	random_shuffle(p.begin(), p.end());
+	// avoid *sqrt* too much killing your precision.
+	for (int i = 0; i < n; i++) {
+		if (Distance2(p[i], res.c) <= res.r) continue;
+		res.c = p[i];
+		res.r = 0;
+		for (int j = 0; j < i; j++) {
+			if (Distance2(p[j], res.c) <= res.r)continue;
+			res.c = (p[i] + p[j]) / 2;
+			res.r = Distance2(p[j], res.c);
+			for (int k = 0; k < j; k++) {
+				if (Distance2(p[k], res.c) <= res.r)continue;
+				res.c = circumcenter(p[i], p[j], p[k]);
+				res.r = Distance2(p[k], res.c);
+			}
+		}
+	}
+	res.r = sqrt(res.r);
+}
+
+int main() {
+	O_O;
+	
+	return 0;
+}
