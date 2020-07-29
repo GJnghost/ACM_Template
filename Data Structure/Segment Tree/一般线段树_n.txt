@@ -1,0 +1,61 @@
+const int maxn = 100000 + 10;
+ll tree[maxn << 2], a[maxn], lazy[maxn << 2];
+
+void pushup(int rt) {//上传
+	tree[rt] = tree[rt << 1] + tree[rt << 1 | 1];
+}
+
+void build(int rt, int L, int R){//建树
+	if (L == R){
+		tree[rt] = a[L];
+		return;
+	}
+	int mid = L + R >> 1;
+	build(rt << 1, L, mid);
+	build(rt << 1 | 1, mid + 1, R);
+	pushup(rt);
+}
+
+void pushdown(int rt, int L, int R){//下传
+	if (lazy[rt]){
+		int mid = L + R >> 1;
+		tree[rt << 1] += lazy[rt] * (mid - L + 1);
+		tree[rt << 1 | 1] += lazy[rt] * (R - mid);
+		lazy[rt << 1] += lazy[rt];
+		lazy[rt << 1 | 1] += lazy[rt];
+	}
+	lazy[rt] = 0;
+}
+
+void update(int rt, int L, int R, int p, int x){//单点更新
+	if (L == R){
+		tree[rt] += x;
+		return;
+	}
+	int mid = L + R >> 1;
+	if (p <= mid) update(rt << 1, L, mid, p, x);
+	else update(rt << 1 | 1, mid + 1, R, p, x);
+	pushup(rt);
+}
+
+void update2(int rt, int L, int R, int l, int r,ll x){//区间更新
+	if (R<l || L>r) return;
+	if (L >= l && R <= r){
+		lazy[rt] += x;
+		tree[rt] += (ll)x * (R - L + 1);
+		return;
+	}
+	pushdown(rt, L, R);
+	int mid = L + R >> 1;
+	update2(rt << 1, L, mid, l, r, x);
+	update2(rt << 1 | 1, mid + 1, R, l, r, x);
+	pushup(rt);
+}
+
+ll query(int rt, int L, int R, int l, int r){//区间查询
+	if (R<l || L>r) return 0;
+	if (R <= r && L >= l) return tree[rt];
+	pushdown(rt, L, R);
+	int mid = L + R >> 1;
+	return query(rt << 1, L, mid, l, r) + query(rt << 1 | 1, mid + 1, R, l, r);
+}
