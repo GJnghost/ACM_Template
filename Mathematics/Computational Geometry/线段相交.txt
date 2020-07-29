@@ -1,0 +1,14 @@
+bool Intersect(Point A, Point B, Point C, Point D) {//线段相交（不包括端点）
+	double t1 = Cross(C - A, D - A) * Cross(C - B, D - B);
+	double t2 = Cross(A - C, B - C) * Cross(A - D, B - D);
+	return dcmp(t1) < 0 && dcmp(t2) < 0;
+}
+bool StrictIntersect(Point A, Point B, Point C, Point D) { //线段相交（包括端点）
+	return
+		dcmp(max(A.x, B.x) - min(C.x, D.x)) >= 0
+		&& dcmp(max(C.x, D.x) - min(A.x, B.x)) >= 0
+		&& dcmp(max(A.y, B.y) - min(C.y, D.y)) >= 0
+		&& dcmp(max(C.y, D.y) - min(A.y, B.y)) >= 0
+		&& dcmp(Cross(C - A, D - A) * Cross(C - B, D - B)) <= 0
+		&& dcmp(Cross(A - C, B - C) * Cross(A - D, B - D)) <= 0;
+}

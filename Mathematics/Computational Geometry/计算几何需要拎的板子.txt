@@ -1,0 +1,194 @@
+#include<bits/stdc++.h>
+#define O_O ios::sync_with_stdio(false);cin.tie(0);cout.tie(0);
+using namespace std;
+typedef long long ll;
+const int maxn = 2e3;
+//计算几何
+const double eps = 1e-7;//eps用于控制精度
+const double pi = acos(-1.0);//pi
+struct Point {//点或向量
+	double x, y;
+	Point() {}
+	Point(double x, double y) :x(x), y(y) {}
+}P[maxn];
+//向量
+typedef Point Vector;
+Vector operator + (Vector a, Vector b) { return Vector(a.x + b.x, a.y + b.y); }//向量加法
+Vector operator - (Vector a, Vector b) { return Vector(a.x - b.x, a.y - b.y); }//向量减法
+Vector operator * (Vector a, double p) { return Vector(a.x * p, a.y * p); }//向量数乘
+Vector operator / (Vector a, double p) { return Vector(a.x / p, a.y / p); }//向量数除
+int dcmp(double x) { if (fabs(x) < eps) return 0; else if (x > 0) return 1; return -1; }//精度三态函数(>0,<0,=0)
+bool operator == (const Point& a, const Point& b) { return dcmp(a.x - b.x) == 0 && dcmp(a.y - b.y) == 0; }//向量相等
+double Dot(Vector a, Vector b) { return a.x * b.x + a.y * b.y; }//内积//=0则垂直
+double Cross(Vector a, Vector b) { return a.x * b.y - a.y * b.x; }//外积//四边形面积//=0则平行//<0则a顺时针转到b
+Vector Rotate(Vector a, double rad) { return Vector(a.x * cos(rad) - a.y * sin(rad), a.x * sin(rad) + a.y * cos(rad)); }//逆时针旋转
+double Length(Vector a) { return sqrt(Dot(a, a)); }//模
+double Angle(Vector a, Vector b) { return acos(Dot(a, b) / Length(a) / Length(b)); }//夹角,弧度制//还不太顺手
+double Distance(Point a, Point b) { return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y)); }//两点间距离
+double Area(Point a, Point b, Point c) { return fabs(Cross(b - a, c - a) / 2); }//三角形面积
+
+//直线与线段
+bool Intersect(Point A, Point B, Point C, Point D) {//线段相交（不包括端点）
+	double t1 = Cross(C - A, D - A) * Cross(C - B, D - B);
+	double t2 = Cross(A - C, B - C) * Cross(A - D, B - D);
+	return dcmp(t1) < 0 && dcmp(t2) < 0;
+}
+bool StrictIntersect(Point A, Point B, Point C, Point D) { //线段相交（包括端点）
+	return
+		dcmp(max(A.x, B.x) - min(C.x, D.x)) >= 0
+		&& dcmp(max(C.x, D.x) - min(A.x, B.x)) >= 0
+		&& dcmp(max(A.y, B.y) - min(C.y, D.y)) >= 0
+		&& dcmp(max(C.y, D.y) - min(A.y, B.y)) >= 0
+		&& dcmp(Cross(C - A, D - A) * Cross(C - B, D - B)) <= 0
+		&& dcmp(Cross(A - C, B - C) * Cross(A - D, B - D)) <= 0;
+}
+double DistanceToLine(Point A, Point M, Point N) {//点A到直线MN的距离,Error:MN=0
+	return fabs(Cross(A - M, A - N) / Distance(M, N));
+}
+Point GetLineIntersection(Point P, Vector v, Point Q, Vector w) {//两直线的交点//预判Cross(v,w)≠0则有且仅有一个解
+	Vector u = P - Q;
+	double t = Cross(w, u) / Cross(v, w);
+	return P + v * t;
+}
+//圆
+
+int main() {
+	O_O;
+	int n; cin >> n;
+	for (int i = 1; i <= n; i++) {
+		for (int j = 1; j <= 3; j++) cin >> P[j].x >> P[j].y;
+		double area = Area(P[1], P[2], P[3]);
+		double x, y; cin >> x >> y;
+		if (x == P[1].x && y == P[1].y) { cout << fixed << setprecision(10) << (P[2].x + P[3].x) / 2.0 << " " << (P[2].y + P[3].y) / 2.0 << "\n"; continue; }
+		if (x == P[2].x && y == P[2].y) { cout << fixed << setprecision(10) << (P[1].x + P[3].x) / 2.0 << " " << (P[1].y + P[3].y) / 2.0 << "\n"; continue; }
+		if (x == P[3].x && y == P[3].y) { cout << fixed << setprecision(10) << (P[1].x + P[2].x) / 2.0 << " " << (P[1].y + P[2].y) / 2.0 << "\n"; continue; }
+		if (dcmp(x - (P[1].x + P[2].x) / 2.0) == 0 && dcmp(y - (P[1].y + P[2].y) / 2.0) == 0) { cout << fixed << setprecision(10) << P[3].x << " " << P[3].y << "\n"; continue; }
+		if (dcmp(x - (P[3].x + P[2].x) / 2.0) == 0 && dcmp(y - (P[3].y + P[2].y) / 2.0) == 0) { cout << fixed << setprecision(10) << P[1].x << " " << P[1].y << "\n"; continue; }
+		if (dcmp(x - (P[1].x + P[3].x) / 2.0) == 0 && dcmp(y - (P[1].y + P[3].y) / 2.0) == 0) { cout << fixed << setprecision(10) << P[2].x << " " << P[2].y << "\n"; continue; }
+		//在12上
+		if (dcmp((x - P[1].x) * (P[1].y - P[2].y) - (y - P[1].y) * (P[1].x - P[2].x)) == 0) {
+			if (P[1].x + P[1].y > P[2].x + P[2].y && ((x + y > P[1].x + P[1].y) || (x + y < P[2].x + P[2].y))) { cout << "-1\n"; continue; }
+			if (P[1].x + P[1].y < P[2].x + P[2].y && ((x + y > P[2].x + P[2].y) || (x + y < P[1].x + P[1].y))) { cout << "-1\n"; continue; }
+			double h1 = DistanceToLine({ x,y }, P[1], P[3]);
+			double h2 = DistanceToLine({ x,y }, P[2], P[3]);
+			if (h1 > h2) {
+				double d = area / h1;
+				double bd = Distance(P[1], P[3]);
+				if (d > bd) { 
+					d = area / h2;
+					bd = Distance(P[2], P[3]);
+					if (d > bd) { cout << "-1\n"; continue; }
+					double yc = d * (P[3].y - P[2].y) / bd + P[2].y;
+					double xc = d * (P[3].x - P[2].x) / bd + P[2].x;
+					cout << fixed << setprecision(10) << xc << " " << yc << "\n";
+					continue;
+				}
+				double yc = d * (P[3].y - P[1].y) / bd + P[1].y;
+				double xc = d * (P[3].x - P[1].x) / bd + P[1].x;
+				cout << fixed << setprecision(10) << xc << " " << yc << "\n";
+			}
+			else {
+				double d = area / h2;
+				double bd = Distance(P[2], P[3]);
+				if (d > bd) {
+					double d = area / h1;
+					double bd = Distance(P[1], P[3]);
+					double yc = d * (P[3].y - P[1].y) / bd + P[1].y;
+					double xc = d * (P[3].x - P[1].x) / bd + P[1].x;
+					cout << fixed << setprecision(10) << xc << " " << yc << "\n";
+					continue;
+				}
+				double yc = d * (P[3].y - P[2].y) / bd + P[2].y;
+				double xc = d * (P[3].x - P[2].x) / bd + P[2].x;
+				cout << fixed << setprecision(10) << xc << " " << yc << "\n";
+			}
+		}
+		//在23上
+		else if (dcmp((x - P[3].x) * (P[3].y - P[2].y) - (y - P[3].y) * (P[3].x - P[2].x)) == 0) {
+			if (P[2].x + P[2].y > P[3].x + P[3].y && ((x + y > P[2].x + P[2].y) || (x + y < P[3].x + P[3].y))) { cout << "-1\n"; continue; }
+			if (P[2].x + P[2].y < P[3].x + P[3].y && ((x + y > P[3].x + P[3].y) || (x + y < P[2].x + P[2].y))) { cout << "-1\n"; continue; }
+			double h1 = DistanceToLine({ x,y }, P[3], P[1]);
+			double h2 = DistanceToLine({ x,y }, P[2], P[1]);
+			if (h1 > h2) {
+				double d = area / h1;
+				double bd = Distance(P[1], P[3]);
+				if (d > bd) { 
+					double d = area / h2;
+					double bd = Distance(P[2], P[1]);
+					if (d > bd) { cout << "-1\n"; continue; }
+					double yc = d * (P[1].y - P[2].y) / bd + P[2].y;
+					double xc = d * (P[1].x - P[2].x) / bd + P[2].x;
+					cout << fixed << setprecision(10) << xc << " " << yc << "\n";
+					continue;
+				}
+				double yc = d * (P[1].y - P[3].y) / bd + P[3].y;
+				double xc = d * (P[1].x - P[3].x) / bd + P[3].x;
+				cout << fixed << setprecision(10) << xc << " " << yc << "\n";
+			}
+			else {
+				double d = area / h2;
+				double bd = Distance(P[2], P[1]);
+				if (d > bd) {
+					double d = area / h1;
+					double bd = Distance(P[1], P[3]);
+					if (d > bd) {cout << "-1\n"; continue; }
+					double yc = d * (P[1].y - P[3].y) / bd + P[3].y;
+					double xc = d * (P[1].x - P[3].x) / bd + P[3].x;
+					cout << fixed << setprecision(10) << xc << " " << yc << "\n";
+					continue;
+				}
+				double yc = d * (P[1].y - P[2].y) / bd + P[2].y;
+				double xc = d * (P[1].x - P[2].x) / bd + P[2].x;
+				cout << fixed << setprecision(10) << xc << " " << yc << "\n";
+			}
+		}
+		//在13上
+		else  if (dcmp((x - P[3].x) * (P[3].y - P[1].y) - (y - P[3].y) * (P[3].x - P[1].x)) == 0) {
+			if (P[1].x + P[1].y > P[3].x + P[3].y && ((x + y > P[1].x + P[1].y) || (x + y < P[3].x + P[3].y))) { cout << "-1\n"; continue; }
+			if (P[1].x + P[1].y < P[3].x + P[3].y && ((x + y > P[3].x + P[3].y) || (x + y < P[1].x + P[1].y))) { cout << "-1\n"; continue; }
+			double h1 = DistanceToLine({ x,y }, P[1], P[2]);
+			double h2 = DistanceToLine({ x,y }, P[3], P[2]);
+			if (h1 > h2) {
+				double d = area / h1;
+				double bd = Distance(P[1], P[2]);
+				if (d > bd) { 
+					double d = area / h2;
+					double bd = Distance(P[2], P[3]);
+					if (d > bd) { cout << "-1\n"; continue; }
+					double yc = d * (P[2].y - P[3].y) / bd + P[3].y;
+					double xc = d * (P[2].x - P[3].x) / bd + P[3].x;
+					cout << fixed << setprecision(10) << xc << " " << yc << "\n";
+					continue;
+				}
+				double yc = d * (P[2].y - P[1].y) / bd + P[1].y;
+				double xc = d * (P[2].x - P[1].x) / bd + P[1].x;
+				cout << fixed << setprecision(10) << xc << " " << yc << "\n";
+			}
+			else {
+				double d = area / h2;
+				double bd = Distance(P[2], P[3]);
+				if (d > bd) { 
+					double d = area / h1;
+					double bd = Distance(P[1], P[2]);
+					if (d > bd)  { cout << "-1\n"; continue; }
+					double yc = d * (P[2].y - P[1].y) / bd + P[1].y;
+					double xc = d * (P[2].x - P[1].x) / bd + P[1].x;
+					cout << fixed << setprecision(10) << xc << " " << yc << "\n";
+					continue;
+				}
+				double yc = d * (P[2].y - P[3].y) / bd + P[3].y;
+				double xc = d * (P[2].x - P[3].x) / bd + P[3].x;
+				cout << fixed << setprecision(10) << xc << " " << yc << "\n";
+			}
+		}
+		else cout << "-1\n";
+	}
+	return 0;
+}
+
+/*
+100
+-1 2 2 2 2 -4 2 0
+
+-0.250000000000 0.500000000000
+*/

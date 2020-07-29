@@ -1,0 +1,7 @@
+double PolygonArea() {//求多边形面积（叉积和计算法）
+	double sum = 0;
+	Point O = Point(0, 0);
+	for (int i = 0; i < n; i++) sum += Cross(P[i] - O, P[(i + 1) % n] - O);
+	if (sum < 0)sum = -sum;
+	return sum / 2;
+}

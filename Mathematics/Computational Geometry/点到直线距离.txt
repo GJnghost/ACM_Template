@@ -1,0 +1,3 @@
+double DistanceToLine(Point A, Point M, Point N) {//点A到直线MN的距离,Error:MN=0
+	return fabs(Cross(A - M, A - N) / Distance(M, N));
+}

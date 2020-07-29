@@ -1,0 +1,5 @@
+Point GetLineIntersection(Point P, Vector v, Point Q, Vector w) {//两直线的交点//预判Cross(v,w)≠0则有且仅有一个解
+	Vector u = P - Q;
+	double t = Cross(w, u) / Cross(v, w);
+	return P + v * t;
+}

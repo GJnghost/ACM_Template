@@ -1,0 +1,5 @@
+bool InsidePolygon(Point A) { //判断点是否在凸多边形内（角度和判别法）
+	double alpha = 0;
+	for (int i = 0; i < n; i++) alpha += fabs(Angle(P[i] - A, P[(i + 1) % n] - A));
+	return dcmp(alpha - 2 * pi) == 0;
+}

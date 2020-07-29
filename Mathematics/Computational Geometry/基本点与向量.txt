@@ -1,0 +1,24 @@
+const double eps = 1e-7;//eps用于控制精度
+const double pi = acos(-1.0);//pi
+struct Point {//点或向量
+	double x, y;
+	Point() {}
+	Point(double x, double y) :x(x), y(y) {}
+}P[maxn];
+
+//向量
+typedef Point Vector;
+Vector operator + (Vector a, Vector b) { return Vector(a.x + b.x, a.y + b.y); }//向量加法
+Vector operator - (Vector a, Vector b) { return Vector(a.x - b.x, a.y - b.y); }//向量减法
+Vector operator * (Vector a, double p) { return Vector(a.x * p, a.y * p); }//向量数乘
+Vector operator / (Vector a, double p) { return Vector(a.x / p, a.y / p); }//向量数除
+int dcmp(double x) { if (fabs(x) < eps) return 0; else if (x > 0) return 1; return -1; }//精度三态函数(>0,<0,=0)
+bool operator == (const Point& a, const Point& b) { return dcmp(a.x - b.x) == 0 && dcmp(a.y - b.y) == 0; }//向量相等
+double Dot(Vector a, Vector b) { return a.x * b.x + a.y * b.y; }//内积//=0则垂直
+double Cross(Vector a, Vector b) { return a.x * b.y - a.y * b.x; }//外积//四边形面积//=0则平行//<0则a顺时针转到b
+Vector Rotate(Vector a, double rad) { return Vector(a.x * cos(rad) - a.y * sin(rad), a.x * sin(rad) + a.y * cos(rad)); }//逆时针旋转
+double Length(Vector a) { return sqrt(Dot(a, a)); }//模
+double Angle(Vector a, Vector b) { return acos(Dot(a, b) / Length(a) / Length(b)); }//夹角,弧度制//还不太顺手
+double Distance(Point a, Point b) { return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y)); }//两点间距离
+double Distance2(Point a, Point b) {return ((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));}
+double Area(Point a, Point b, Point c) { return fabs(Cross(b - a, c - a) / 2); }//三角形面积
